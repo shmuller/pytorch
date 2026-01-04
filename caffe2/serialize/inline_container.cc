@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <iostream>
 
 #include <c10/core/Allocator.h>
 #include <c10/core/CPUAllocator.h>
@@ -279,6 +280,7 @@ std::tuple<at::DataPtr, size_t> PyTorchStreamReader::getRecord(const std::string
   size_t key = getRecordID(name);
   mz_zip_archive_file_stat stat;
   mz_zip_reader_file_stat(ar_.get(), key, &stat);
+  std::cout << "getRecord() name = " << name << ", key = " << key << ", size = " << stat.m_uncomp_size << '\n';
   valid("retrieving file meta-data for ", name.c_str());
   at::DataPtr retval = c10::GetCPUAllocator()->allocate(stat.m_uncomp_size);
   mz_zip_reader_extract_to_mem(ar_.get(), key, retval.get(), stat.m_uncomp_size, 0);
