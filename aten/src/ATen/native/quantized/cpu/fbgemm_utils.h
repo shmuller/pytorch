@@ -42,22 +42,22 @@ struct TORCH_API PackedLinearWeight : public LinearPackedParamsBase {
   PackedLinearWeight(
       PackedBMatrixPtr w,
       c10::optional<at::Tensor> bias,
-      std::vector<int32_t> col_offsets,
-      std::vector<float> w_scale,
-      std::vector<int32_t> w_zp,
+      const int32_t* col_offsets,
+      float* w_scale,
+      int32_t* w_zp,
       c10::QScheme q_scheme)
       : w(std::move(w)),
         bias_(std::move(bias)),
-        col_offsets(std::move(col_offsets)),
-        w_scale(std::move(w_scale)),
-        w_zp(std::move(w_zp)),
+        col_offsets(col_offsets),
+        w_scale(w_scale),
+        w_zp(w_zp),
         q_scheme(std::move(q_scheme)) {}
 
   PackedBMatrixPtr w;
   c10::optional<at::Tensor> bias_;
-  std::vector<int32_t> col_offsets;
-  std::vector<float> w_scale;
-  std::vector<int32_t> w_zp;
+  const int32_t* col_offsets;
+  float* w_scale;
+  int32_t* w_zp;
   c10::QScheme q_scheme;
 
   at::Tensor apply(

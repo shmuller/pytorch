@@ -66,9 +66,6 @@ at::Tensor& PackedLinearWeight::apply_impl(
 
   std::vector<float> output_multiplier_float(1, 0.0);
   std::vector<float> act_times_w_scale(1, 0.0);
-  TORCH_CHECK(
-      w_scale.size() == w_zp.size(),
-      "Weight scales and zero points vectors should have the same size.");
   if (q_scheme == c10::kPerTensorAffine) {
     // Process the per tensor quantization.
     act_times_w_scale[0] = (input_scale_float * w_scale[0]);
@@ -158,9 +155,9 @@ at::Tensor& PackedLinearWeight::apply_impl(
                 output_multiplier_float.data(),
                 output_zero_point_int32,
                 input_zero_point_int32,
-                w_zp.data(),
+                w_zp,
                 packA.getRowOffsetBuffer(),
-                col_offsets.data(),
+                col_offsets,
                 bias_ptr,
                 N, /* nCol */
                 1 /* groups */,
@@ -193,9 +190,9 @@ at::Tensor& PackedLinearWeight::apply_impl(
                 output_multiplier_float.data(),
                 output_zero_point_int32,
                 input_zero_point_int32,
-                w_zp.data(),
+                w_zp,
                 packA.getRowOffsetBuffer(),
-                col_offsets.data(),
+                col_offsets,
                 bias_ptr,
                 // NOLINTNEXTLINE(bugprone-argument-comment)
                 N, /*nCol=*/

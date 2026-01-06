@@ -156,11 +156,11 @@ at::Tensor PackedLinearWeight::apply_dynamic_impl(
         fbgemm::ReQuantizeForFloat<ReluFused> outputProcObj(
             /*nextop=*/doNothingObj,
             /*Aq_scale=*/q_params.scale,
-            /*Bq_scale=*/w_scale.data(),
+            /*Bq_scale=*/w_scale,
             /*Aq_zero_point=*/q_params.zero_point,
-            /*Bq_zero_point=*/w_zp.data(),
+            /*Bq_zero_point=*/w_zp,
             /*row_offsets=*/packA.getRowOffsetBuffer(),
-            /*col_offsets=*/col_offsets.data(),
+            /*col_offsets=*/col_offsets,
             /*bias=*/bias_ptr,
             /*nCol=*/N);
 
@@ -190,11 +190,11 @@ at::Tensor PackedLinearWeight::apply_dynamic_impl(
             outputProcObj(
                 /*nextop=*/doNothingObj,
                 /*Aq_scale=*/q_params.scale,
-                /*Bq_scale=*/w_scale.data(),
+                /*Bq_scale=*/w_scale,
                 /*Aq_zero_point=*/q_params.zero_point,
-                /*Bq_zero_point=*/w_zp.data(),
+                /*Bq_zero_point=*/w_zp,
                 /*row_offsets=*/packA.getRowOffsetBuffer(),
-                /*col_offsets=*/col_offsets.data(),
+                /*col_offsets=*/col_offsets,
                 /*bias=*/bias_ptr,
                 /*nCol=*/N);
 
