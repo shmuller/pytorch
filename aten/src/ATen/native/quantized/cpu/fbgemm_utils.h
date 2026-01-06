@@ -12,6 +12,18 @@
 #include <fbgemm/FbgemmFP16.h>
 #include <fbgemm/QuantUtils.h>
 
+template <class T>
+struct ObjectWithBuffersDeleter {
+  c10::DataPtr t_ptr;
+
+  void operator()(T* p) noexcept {
+    if (p) {
+      p->~T();
+    }
+    t_ptr = c10::DataPtr();
+  }
+};
+
 // The struct for the packed weight matrix (PackBMatrix) and the corresponding
 // column offsets used for the fully connect layer, which are both prepared in
 // the prepacking step to save the computations in the inference. Note the
@@ -22,23 +34,26 @@
 // (affine quantization) of input matrix.
 // Note that in JIT mode we can think of a way to fuse col_offsets with bias.
 struct TORCH_API PackedLinearWeight : public LinearPackedParamsBase {
+  using PackedBMatrixPtr =
+      std::unique_ptr<
+          fbgemm::PackBMatrix<int8_t>,
+        ObjectWithBuffersDeleter<fbgemm::PackBMatrix<int8_t>>>;
+
   PackedLinearWeight(
-      std::unique_ptr<fbgemm::PackBMatrix<int8_t>> w,
+      PackedBMatrixPtr w,
       c10::optional<at::Tensor> bias,
       std::vector<int32_t> col_offsets,
       std::vector<float> w_scale,
       std::vector<int32_t> w_zp,
-      c10::QScheme q_scheme,
-      c10::DataPtr w_data = c10::DataPtr())
-      : w_data_(std::move(w_data)),
-        w(std::move(w)),
+      c10::QScheme q_scheme)
+      : w(std::move(w)),
         bias_(std::move(bias)),
         col_offsets(std::move(col_offsets)),
         w_scale(std::move(w_scale)),
         w_zp(std::move(w_zp)),
         q_scheme(std::move(q_scheme)) {}
-  c10::DataPtr w_data_;
-  std::unique_ptr<fbgemm::PackBMatrix<int8_t>> w;
+
+  PackedBMatrixPtr w;
   c10::optional<at::Tensor> bias_;
   std::vector<int32_t> col_offsets;
   std::vector<float> w_scale;

@@ -14,6 +14,7 @@
 #include <c10/util/irange.h>
 
 #include <algorithm>
+#include <new>
 #include <vector>
 
 int register_linear_params();
@@ -100,32 +101,35 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
         "bias should have N elements: " + std::to_string(N));
     bias_contig = bias->contiguous();
   }
-    const int packed_elems = fbgemm::PackBMatrix<int8_t>::packedBufferSize(
-      static_cast<int>(K), static_cast<int>(N));
-    TORCH_CHECK(packed_elems > 0, "FBGEMM packed buffer size must be > 0");
 
-    const size_t packed_bytes = static_cast<size_t>(packed_elems) * sizeof(int8_t);
-    auto packed_w_data = c10::GetCPUAllocator()->allocate(packed_bytes);
-    int8_t* packed_w_ptr = static_cast<int8_t*>(packed_w_data.get());
+  using PackT = fbgemm::PackBMatrix<int8_t>;
+  const size_t packed_bytes = PackT::packedBufferSize(K, N) * sizeof(int8_t);
+  const size_t total_bytes = packed_bytes + sizeof(PackT);
+  auto data = c10::GetCPUAllocator()->allocate(total_bytes);
+  auto* buf_ptr = static_cast<std::int8_t*>(data.get());
+  auto* obj_ptr = buf_ptr + packed_bytes;
 
-    auto packed_w = std::make_unique<fbgemm::PackBMatrix<int8_t>>(
-          /*trans=*/fbgemm::matrix_op_t::Transpose,
-          /*nRow=*/K,
-          /*nCol=*/N,
-          /*smat=*/weight_ptr_int8,
-          /*ld=*/K,
-          /*pmat=*/packed_w_ptr,
-          /*groups=*/1);
+  auto* packed_w_raw = new (obj_ptr) PackT(
+      /*trans=*/fbgemm::matrix_op_t::Transpose,
+      /*nRow=*/K,
+      /*nCol=*/N,
+      /*smat=*/weight_ptr_int8,
+      /*ld=*/K,
+      /*pmat=*/buf_ptr,
+      /*groups=*/1);
 
-    auto ret_ptr = c10::make_intrusive<PackedLinearWeight>(
+  PackedLinearWeight::PackedBMatrixPtr packed_w(
+      packed_w_raw,
+      ObjectWithBuffersDeleter<PackT>{ std::move(data) });
+
+  auto ret_ptr = c10::make_intrusive<PackedLinearWeight>(
       std::move(packed_w),
       bias_contig,
       std::move(col_offsets),
       std::move(weight_scales_float),
       std::move(weight_zero_points_int32),
-      qtype,
-      std::move(packed_w_data));
-    return ret_ptr;
+      qtype);
+  return ret_ptr;
 }
 #endif // USE_FBGEMM
 
