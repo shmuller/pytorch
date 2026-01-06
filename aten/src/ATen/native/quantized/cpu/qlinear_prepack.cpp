@@ -9,6 +9,8 @@
 #include <torch/custom_class.h>
 #include <torch/library.h>
 
+#include <c10/core/CPUAllocator.h>
+
 #include <c10/util/irange.h>
 
 #include <algorithm>
@@ -98,21 +100,32 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
         "bias should have N elements: " + std::to_string(N));
     bias_contig = bias->contiguous();
   }
-  auto ret_ptr = c10::make_intrusive<PackedLinearWeight>(
-      std::make_unique<fbgemm::PackBMatrix<int8_t>>(
+    const int packed_elems = fbgemm::PackBMatrix<int8_t>::packedBufferSize(
+      static_cast<int>(K), static_cast<int>(N));
+    TORCH_CHECK(packed_elems > 0, "FBGEMM packed buffer size must be > 0");
+
+    const size_t packed_bytes = static_cast<size_t>(packed_elems) * sizeof(int8_t);
+    auto packed_w_data = c10::GetCPUAllocator()->allocate(packed_bytes);
+    int8_t* packed_w_ptr = static_cast<int8_t*>(packed_w_data.get());
+
+    auto packed_w = std::make_unique<fbgemm::PackBMatrix<int8_t>>(
           /*trans=*/fbgemm::matrix_op_t::Transpose,
           /*nRow=*/K,
           /*nCol=*/N,
           /*smat=*/weight_ptr_int8,
           /*ld=*/K,
-          /*pmat=*/nullptr, // PackBMatrix manages ownership of pmat
-          /*groups=*/1),
+          /*pmat=*/packed_w_ptr,
+          /*groups=*/1);
+
+    auto ret_ptr = c10::make_intrusive<PackedLinearWeight>(
+      std::move(packed_w),
       bias_contig,
-      col_offsets,
-      weight_scales_float,
-      weight_zero_points_int32,
-      qtype);
-  return ret_ptr;
+      std::move(col_offsets),
+      std::move(weight_scales_float),
+      std::move(weight_zero_points_int32),
+      qtype,
+      std::move(packed_w_data));
+    return ret_ptr;
 }
 #endif // USE_FBGEMM
 

@@ -3,6 +3,7 @@
 #include <ATen/Tensor.h>
 #include <ATen/native/quantized/PackedParams.h>
 #include <ATen/native/quantized/cpu/EmbeddingPackedParams.h>
+#include <c10/core/Allocator.h>
 #include <c10/core/QScheme.h>
 #include <c10/util/irange.h>
 
@@ -27,13 +28,16 @@ struct TORCH_API PackedLinearWeight : public LinearPackedParamsBase {
       std::vector<int32_t> col_offsets,
       std::vector<float> w_scale,
       std::vector<int32_t> w_zp,
-      c10::QScheme q_scheme)
-      : w(std::move(w)),
+      c10::QScheme q_scheme,
+      c10::DataPtr w_data = c10::DataPtr())
+      : w_data_(std::move(w_data)),
+        w(std::move(w)),
         bias_(std::move(bias)),
         col_offsets(std::move(col_offsets)),
         w_scale(std::move(w_scale)),
         w_zp(std::move(w_zp)),
         q_scheme(std::move(q_scheme)) {}
+  c10::DataPtr w_data_;
   std::unique_ptr<fbgemm::PackBMatrix<int8_t>> w;
   c10::optional<at::Tensor> bias_;
   std::vector<int32_t> col_offsets;
