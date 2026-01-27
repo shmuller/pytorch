@@ -3388,9 +3388,9 @@ class InstructionTranslatorBase(
         # ensure everything is a dict
         items = [
             SourcelessBuilder.create(self, dict).call_function(
-                self,
+                self,  # pyrefly: ignore[bad-argument-type]
                 [x],
-                {},  # pyrefly: ignore[bad-argument-type]
+                {},
             )
             for x in items
         ]  # type: ignore[arg-type]
@@ -3740,9 +3740,9 @@ class InstructionTranslatorBase(
     def LIST_TO_TUPLE(self, inst: Instruction) -> None:
         self.push(
             SourcelessBuilder.create(self, tuple).call_function(
-                self,
+                self,  # pyrefly: ignore[bad-argument-type]
                 [self.pop()],
-                {},  # pyrefly: ignore[bad-argument-type]
+                {},
             )
         )  # type: ignore[arg-type]
 
@@ -3819,8 +3819,12 @@ class InstructionTranslatorBase(
                     self,
                     tuple(
                         [
-                            tos1.getitem_const(self, k) for k in keys
-                        ]  # pyrefly: ignore[bad-argument-type]
+                            tos1.getitem_const(
+                                self,  # pyrefly: ignore[bad-argument-type]
+                                k,
+                            )
+                            for k in keys
+                        ]
                     ),
                 )
             )  # type: ignore[attr-defined,arg-type]
