@@ -2662,22 +2662,22 @@ class InstructionTranslatorBase(
             argsvars = SourcelessBuilder.create(
                 self,
                 tuple(
-                    argsvars.force_unpack_var_sequence(
+                    argsvars.force_unpack_var_sequence(  # pyrefly: ignore[unbound-name]
                         self
-                    )  # pyrefly: ignore[unbound-name]
+                    )
                 ),
             )
 
         # Unpack for cases like fn(**obj) where obj is a map
         if isinstance(
-            kwargsvars,
-            UserDefinedObjectVariable,  # pyrefly: ignore[unbound-name]
+            kwargsvars,  # pyrefly: ignore[unbound-name]
+            UserDefinedObjectVariable,
         ):
             kwargsvars = BuiltinVariable.call_custom_dict(self, dict, kwargsvars)  # type: ignore[arg-type]
 
         if not isinstance(
-            argsvars,
-            BaseListVariable,  # pyrefly: ignore[unbound-name]
+            argsvars,  # pyrefly: ignore[unbound-name]
+            BaseListVariable,
         ) or not isinstance(
             kwargsvars,  # pyrefly: ignore[unbound-name]
             ConstDictVariable,
@@ -2695,8 +2695,8 @@ class InstructionTranslatorBase(
         )
         self.call_function(
             fn,
-            argsvars.items,
-            kwargsvars,  # pyrefly: ignore[unbound-name,missing-attribute]
+            argsvars.items,  # pyrefly: ignore[unbound-name,missing-attribute]
+            kwargsvars,
         )
 
     @break_graph_if_unsupported(
@@ -3388,8 +3388,10 @@ class InstructionTranslatorBase(
         # ensure everything is a dict
         items = [
             SourcelessBuilder.create(self, dict).call_function(
-                self, [x], {}
-            )  # pyrefly: ignore[bad-argument-type]
+                self,
+                [x],
+                {},  # pyrefly: ignore[bad-argument-type]
+            )
             for x in items
         ]  # type: ignore[arg-type]
         result: dict[Any, Any] = {}
@@ -3738,8 +3740,10 @@ class InstructionTranslatorBase(
     def LIST_TO_TUPLE(self, inst: Instruction) -> None:
         self.push(
             SourcelessBuilder.create(self, tuple).call_function(
-                self, [self.pop()], {}
-            )  # pyrefly: ignore[bad-argument-type]
+                self,
+                [self.pop()],
+                {},  # pyrefly: ignore[bad-argument-type]
+            )
         )  # type: ignore[arg-type]
 
     def STOPITERATION_ERROR(self, inst: Instruction) -> None:
@@ -3814,8 +3818,10 @@ class InstructionTranslatorBase(
                 SourcelessBuilder.create(
                     self,
                     tuple(
-                        [tos1.getitem_const(self, k) for k in keys]
-                    ),  # pyrefly: ignore[bad-argument-type]
+                        [
+                            tos1.getitem_const(self, k) for k in keys
+                        ]  # pyrefly: ignore[bad-argument-type]
+                    ),
                 )
             )  # type: ignore[attr-defined,arg-type]
             if sys.version_info < (3, 11):
