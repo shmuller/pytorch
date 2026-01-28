@@ -12192,9 +12192,6 @@ op_db: list[OpInfo] = [
                DecorateInfo(unittest.expectedFailure, 'TestFakeTensor', 'test_fake_autocast'),
                # Booleans mismatch: AssertionError: False is not true
                DecorateInfo(unittest.expectedFailure, 'TestFakeTensor', 'test_fake'),
-               # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
-               DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_dtypes', device_type='mps'),
-               DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps', dtypes=(torch.complex32,)),
            )),
     OpInfo('arange',
            dtypes=all_types_and(torch.bfloat16, torch.float16),
@@ -12263,8 +12260,6 @@ op_db: list[OpInfo] = [
                DecorateInfo(unittest.skip("make_traced() doesn't set seed properly!"), 'TestCommon', 'test_python_ref_executor'),
 
                DecorateInfo(unittest.expectedFailure, 'TestDecomp', 'test_quick'),
-               # Error: The operator 'aten::cauchy_' is not currently implemented for the MPS device
-               DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps'),
            )),
     OpInfo('exponential',
            op=lambda inp, *args, **kwargs: wrapper_set_seed(torch.Tensor.exponential_, inp, *args, **kwargs),
@@ -12327,8 +12322,12 @@ op_db: list[OpInfo] = [
 
                DecorateInfo(unittest.expectedFailure, 'TestDecomp', 'test_quick'),
 
-               # Error: The operator 'aten::geometric_' is not currently implemented for the MPS device
-               DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps'),
+               # Unsupported type * for operation geometric_mps_:0.800000
+               DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_dtypes', device_type='mps'),
+               DecorateInfo(
+                   unittest.expectedFailure, 'TestCommon', 'test_noncontiguous_samples',
+                   device_type='mps', dtypes=(torch.int64,),
+               ),
            )),
     OpInfo('log_normal',
            op=lambda inp, *args, **kwargs: wrapper_set_seed(torch.Tensor.log_normal_, inp, *args, **kwargs),
@@ -12687,6 +12686,7 @@ op_db: list[OpInfo] = [
            dtypes=all_types_and_complex_and(torch.float16, torch.bfloat16),
            dtypesIfCUDA=floating_and_complex_types_and(torch.float16, torch.bfloat16),
            dtypesIfHpu=custom_types(torch.float32, torch.bfloat16),
+           dtypesIfMPS=all_types_and_complex_and(torch.float16, torch.bfloat16, torch.bool),
            sample_inputs_func=sample_inputs_dot_vdot,
            error_inputs_func=error_inputs_dot_vdot,
            supports_forward_ad=True,
@@ -12698,8 +12698,11 @@ op_db: list[OpInfo] = [
                    'TestSchemaCheckModeOpInfo',
                    'test_schema_correctness',
                    dtypes=(torch.complex64, torch.complex128)),
-               # NotImplementedError: The operator 'aten::vdot' is not currently implemented for the MPS device
-               DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps'),
+               # UnboundLocalError: cannot access local variable 'cpu_out' where it is not associated with a value
+               DecorateInfo(
+                   unittest.expectedFailure, 'TestConsistency', 'test_output_match',
+                   device_type='mps', dtypes=(torch.bool,),
+               ),
            )),
     OpInfo('bmm',
            dtypes=all_types_and_complex_and(torch.float16, torch.bfloat16),
@@ -14765,13 +14768,6 @@ op_db: list[OpInfo] = [
            supports_forward_ad=True,
            supports_fwgrad_bwgrad=True,
            check_batched_forward_grad=False,
-           skips=(
-               # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
-               DecorateInfo(
-                   unittest.expectedFailure, 'TestCommon', 'test_complex_half_reference_testing',
-                   device_type='mps', dtypes=(torch.complex32,)
-               ),
-           ),
            supports_out=False),
     OpInfo('masked_scatter',
            dtypes=all_types_and_complex_and(torch.bool, torch.half, torch.bfloat16),
@@ -15342,6 +15338,7 @@ op_db: list[OpInfo] = [
     BinaryUfuncInfo('gcd',
                     ref=np.gcd,
                     dtypes=integral_types_and(),
+                    dtypesIfMPS=integral_types_and(torch.bool),
                     supports_autograd=False,
                     supports_rhs_python_scalar=False,
                     skips=(
@@ -15349,11 +15346,11 @@ op_db: list[OpInfo] = [
                                      'TestBinaryUfuncs',
                                      'test_reference_numerics_small_values',
                                      dtypes=(torch.int8,)),
-                        # NotImplementedError: The operator 'aten::gcd.out' is not currently implemented for the MPS device
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_dtypes', device_type='mps'),
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_out_warning', device_type='mps'),
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_out', device_type='mps'),
-                        DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_noncontiguous_samples', device_type='mps'),
+                        # UnboundLocalError: cannot access local variable 'cpu_out' where it is not associated with a value
+                        DecorateInfo(
+                            unittest.expectedFailure, 'TestConsistency', 'test_output_match',
+                            device_type='mps', dtypes=(torch.bool,),
+                        ),
                     )),
     BinaryUfuncInfo('isclose',
                     ref=np.isclose,
@@ -24243,9 +24240,6 @@ python_ref_db = [
         skips=(
             # RuntimeError: Cannot cast FakeTensor(FakeTensor(..., device='meta', size=()), cpu) to number
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_meta'),
-            # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_dtypes', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps', dtypes=(torch.complex32,)),
             # ValueError: Can't convert a tensor with 10 elements to a number!
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_errors'),),
     ),
@@ -25405,15 +25399,11 @@ python_ref_db = [
             # TypeError: Cannot convert a MPS Tensor to float64 dtype as the MPS framework doesn't support float64
             DecorateInfo(
                 unittest.expectedFailure, 'TestCommon', 'test_python_ref', device_type='mps',
-                dtypes=(torch.bfloat16, torch.complex32,)
-            ),
-            DecorateInfo(
-                unittest.expectedFailure, 'TestCommon', 'test_python_ref_meta', device_type='mps',
-                dtypes=(torch.complex32,)
+                dtypes=(torch.bfloat16,)
             ),
             DecorateInfo(
                 unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback', device_type='mps',
-                dtypes=(torch.float16, torch.complex32,)
+                dtypes=(torch.float16,)
             ),
         ),
     ),
@@ -25578,10 +25568,6 @@ python_ref_db = [
     ElementwiseBinaryPythonRefInfo(
         "_refs.eq",
         torch_opinfo_name="eq",
-        skips=(
-            # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps', dtypes=(torch.complex32,)),
-        ),
     ),
     ElementwiseBinaryPythonRefInfo(
         "_refs.float_power",
@@ -25701,13 +25687,6 @@ python_ref_db = [
                          'TestBinaryUfuncs',
                          'test_reference_numerics_small_values',
                          dtypes=(torch.int8,)),
-            # NotImplementedError: The operator 'aten::gcd.out' is not currently implemented for the MPS device
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_meta', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_out_warning', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_out', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_dtypes', device_type='mps'),
         ),
     ),
     ElementwiseBinaryPythonRefInfo(
@@ -25762,11 +25741,7 @@ python_ref_db = [
         torch_opinfo_name="lcm",
         skips=(
             # The operator 'aten::lcm.out' is not currently implemented for the MPS device.
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_dtypes', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_out', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_out_warning', device_type='mps'),
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_meta', device_type='mps'),
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback', device_type='mps'),
         ),
     ),
@@ -25845,8 +25820,14 @@ python_ref_db = [
                 dtypes=(torch.complex32,), device_type='cuda'
             ),
             # TypeError: Trying to convert ComplexDouble to the MPS backend but it does not have support for that dtype
-            # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps', dtypes=(torch.complex32,)),
+            DecorateInfo(
+                unittest.expectedFailure, 'TestCommon', 'test_python_ref',
+                device_type='mps', dtypes=(torch.complex32,)
+            ),
+            DecorateInfo(
+                unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback',
+                device_type='mps', dtypes=(torch.complex32,)
+            ),
         )
     ),
     ElementwiseBinaryPythonRefInfo(
@@ -25984,15 +25965,11 @@ python_ref_db = [
             # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
             DecorateInfo(
                 unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback',
-                device_type='mps', dtypes=(torch.float16, torch.complex32)
-            ),
-            DecorateInfo(
-                unittest.expectedFailure, 'TestCommon', 'test_python_ref_meta',
-                device_type='mps', dtypes=(torch.complex32,)
+                device_type='mps', dtypes=(torch.float16,)
             ),
             DecorateInfo(
                 unittest.expectedFailure, 'TestCommon', 'test_python_ref',
-                device_type='mps', dtypes=(torch.float16, torch.complex32, torch.bfloat16)
+                device_type='mps', dtypes=(torch.float16, torch.bfloat16)
             ),
         ),
     ),
@@ -26671,8 +26648,6 @@ python_ref_db = [
         skips=(
             # RuntimeError: no _refs support for torch.Tensor.is_conj
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref', dtypes=[torch.complex64, torch.complex128]),
-            # NotImplementedError: The operator 'aten::vdot' is not currently implemented for the MPS device
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', device_type='mps', dtypes=(torch.complex64,)),
         ),
     ),
     PythonRefInfo(
@@ -26684,9 +26659,11 @@ python_ref_db = [
         skips=(
             # RuntimeError: no _refs support for torch.Tensor.is_conj
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref', dtypes=[torch.complex64, torch.complex128]),
-            # The operator 'aten::vdot' is not currently implemented for the MPS device
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref', device_type='mps'),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback', device_type='mps'),
+            # Exception: Conj mismatch! is_conj is set to True and False
+            DecorateInfo(
+                unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback',
+                device_type='mps', dtypes=[torch.complex64]
+            ),
         ),
     ),
     PythonRefInfo(
@@ -27313,13 +27290,9 @@ python_ref_db = [
         torch_opinfo_name="masked_fill",
         skips=(
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref_errors'),
-            # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
+            # TypeError: Trying to convert ComplexDouble to the MPS backend but it does not have support for that dtype.
             DecorateInfo(
                 unittest.expectedFailure, 'TestCommon', 'test_python_ref',
-                device_type='mps', dtypes=(torch.complex32,)
-            ),
-            DecorateInfo(
-                unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback',
                 device_type='mps', dtypes=(torch.complex32,)
             ),
         ),
@@ -27371,16 +27344,10 @@ python_ref_db = [
         # empty_strided
         skips=(
             # RuntimeError: index_fill_(): Complex types are yet not supported
-            # NotImplementedError: "_local_scalar_dense_mps" not implemented for 'ComplexHalf'
             DecorateInfo(
                 unittest.expectedFailure, 'TestCommon', 'test_python_ref_torch_fallback',
                 device_type='mps', dtypes=(torch.complex64, torch.complex32)
             ),
-            DecorateInfo(
-                unittest.expectedFailure, 'TestCommon', 'test_python_ref_meta',
-                device_type='mps', dtypes=(torch.complex32,)
-            ),
-            DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_dtypes', device_type='mps'),
             # no _refs support for Tensor.__setitem__
             DecorateInfo(unittest.expectedFailure, 'TestCommon', 'test_python_ref'),)
     ),
