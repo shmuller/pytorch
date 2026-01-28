@@ -210,7 +210,6 @@ ops_dde_xfail = {
     xfail("nn.functional.dropout3d"),
     xfail("nn.functional.embedding"),
     xfail("nn.functional.embedding_bag"),
-    xfail("nn.functional.feature_alpha_dropout"),
     xfail("nn.functional.feature_alpha_dropout", "with_train"),
     xfail("nn.functional.feature_alpha_dropout", "without_train"),
     xfail("nn.functional.fractional_max_pool2d"),
@@ -241,7 +240,6 @@ ops_dde_xfail = {
     xfail("nn.functional.multi_head_attention_forward"),
     xfail("nn.functional.multilabel_margin_loss"),
     xfail("nn.functional.nll_loss"),
-    xfail("nn.functional.pad"),
     xfail("nn.functional.pad", "circular"),
     xfail("nn.functional.pad", "reflect"),
     xfail("nn.functional.pad", "replicate"),
@@ -274,7 +272,6 @@ ops_dde_xfail = {
     xfail("roll"),
     xfail("scatter"),
     xfail("scatter_add"),
-    xfail("scatter_reduce"),
     xfail("scatter_reduce", "amax"),
     xfail("scatter_reduce", "amin"),
     xfail("scatter_reduce", "mean"),
@@ -335,7 +332,6 @@ ops_skip = {
     skip("signal.windows.nuttall"),
     skip("zeros"),
     # Sparse ops that can't be deepcopied
-    skip("sparse.mm"),
     skip("sparse.sampled_addmm"),
 }
 
