@@ -9,9 +9,12 @@
 #include <torch/custom_class.h>
 #include <torch/library.h>
 
+#include <c10/core/CPUAllocator.h>
+
 #include <c10/util/irange.h>
 
 #include <algorithm>
+#include <new>
 #include <vector>
 
 int register_linear_params();
@@ -57,37 +60,11 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
   // TODO: contiguous is called for further JIT optimizations.
   auto weight_contig = weight.contiguous();
   const auto qtype = weight.qscheme();
-  std::vector<int32_t> weight_zero_points_int32(1, 0);
-  if (qtype == c10::kPerTensorAffine) {
-    weight_zero_points_int32[0] = weight.q_zero_point();
-  } else if (qtype == c10::kPerChannelAffine) {
-    weight_zero_points_int32.resize(N, 0);
-    for (const auto i : c10::irange(N)) {
-      weight_zero_points_int32[i] =
-          weight.q_per_channel_zero_points()[i].item<int32_t>();
-    }
-  }
-  std::vector<float> weight_scales_float(1, 0.0);
-  if (qtype == c10::kPerTensorAffine) {
-    weight_scales_float[0] = weight.q_scale();
-  } else if (qtype == c10::kPerChannelAffine) {
-    weight_scales_float.resize(N, 0.0);
-    for (const auto i : c10::irange(N)) {
-      weight_scales_float[i] = weight.q_per_channel_scales()[i].item<float>();
-    }
-  }
+  const int64_t w_zp_size = (qtype == c10::kPerTensorAffine) ? 1 : N;
+  const int64_t w_scale_size = (qtype == c10::kPerTensorAffine) ? 1 : N;
 
   int8_t* weight_ptr_int8 =
       reinterpret_cast<int8_t*>(weight_contig.data_ptr<c10::qint8>());
-
-  std::vector<int32_t> col_offsets(N);
-  calc_col_offsets_transpose(
-      /*K=*/K,
-      /*N=*/N,
-      /*Bint8=*/weight_ptr_int8,
-      /*B_zero_point=*/weight_zero_points_int32.data(),
-      /*col_offsets=*/col_offsets.data(),
-      /*qtype=*/qtype);
 
   c10::optional<at::Tensor> bias_contig;
   if (bias.has_value()) {
@@ -98,19 +75,63 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
         "bias should have N elements: " + std::to_string(N));
     bias_contig = bias->contiguous();
   }
+
+  using PackT = fbgemm::PackBMatrix<int8_t>;
+  const size_t packed_bytes = PackT::packedBufferSize(K, N) * sizeof(int8_t);
+  const size_t col_offsets_bytes = static_cast<size_t>(N) * sizeof(int32_t);
+  const size_t w_scale_bytes = static_cast<size_t>(w_scale_size) * sizeof(float);
+  const size_t w_zp_bytes = static_cast<size_t>(w_zp_size) * sizeof(int32_t);
+  const size_t total_bytes =
+      packed_bytes + col_offsets_bytes + w_scale_bytes + w_zp_bytes + sizeof(PackT);
+  auto data = c10::GetCPUAllocator()->allocate(total_bytes);
+  auto* buf_ptr = static_cast<std::int8_t*>(data.get());
+
+  auto* col_offsets_ptr =
+      reinterpret_cast<int32_t*>(buf_ptr + packed_bytes);
+  auto* w_scale_ptr =
+      reinterpret_cast<float*>(reinterpret_cast<char*>(col_offsets_ptr) + col_offsets_bytes);
+  auto* w_zp_ptr =
+      reinterpret_cast<int32_t*>(reinterpret_cast<char*>(w_scale_ptr) + w_scale_bytes);
+  auto* obj_ptr =
+      reinterpret_cast<void*>(reinterpret_cast<char*>(w_zp_ptr) + w_zp_bytes);
+
+  if (qtype == c10::kPerTensorAffine) {
+    w_zp_ptr[0] = weight.q_zero_point();
+    w_scale_ptr[0] = weight.q_scale();
+  } else if (qtype == c10::kPerChannelAffine) {
+    for (const auto i : c10::irange(N)) {
+      w_zp_ptr[i] = weight.q_per_channel_zero_points()[i].item<int32_t>();
+      w_scale_ptr[i] = weight.q_per_channel_scales()[i].item<float>();
+    }
+  }
+
+  calc_col_offsets_transpose(
+      /*K=*/K,
+      /*N=*/N,
+      /*Bint8=*/weight_ptr_int8,
+      /*B_zero_point=*/w_zp_ptr,
+      /*col_offsets=*/col_offsets_ptr,
+      /*qtype=*/qtype);
+
+  auto* packed_w_raw = new (obj_ptr) PackT(
+      /*trans=*/fbgemm::matrix_op_t::Transpose,
+      /*nRow=*/K,
+      /*nCol=*/N,
+      /*smat=*/weight_ptr_int8,
+      /*ld=*/K,
+      /*pmat=*/buf_ptr,
+      /*groups=*/1);
+
+  PackedLinearWeight::PackedBMatrixPtr packed_w(
+      packed_w_raw,
+      ObjectWithBuffersDeleter<PackT>{ std::move(data) });
+
   auto ret_ptr = c10::make_intrusive<PackedLinearWeight>(
-      std::make_unique<fbgemm::PackBMatrix<int8_t>>(
-          /*trans=*/fbgemm::matrix_op_t::Transpose,
-          /*nRow=*/K,
-          /*nCol=*/N,
-          /*smat=*/weight_ptr_int8,
-          /*ld=*/K,
-          /*pmat=*/nullptr, // PackBMatrix manages ownership of pmat
-          /*groups=*/1),
+      std::move(packed_w),
       bias_contig,
-      col_offsets,
-      weight_scales_float,
-      weight_zero_points_int32,
+      col_offsets_ptr,
+      w_scale_ptr,
+      w_zp_ptr,
       qtype);
   return ret_ptr;
 }

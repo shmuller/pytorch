@@ -21,10 +21,11 @@ std::tuple<at::Tensor, c10::optional<at::Tensor>> PackedLinearWeight::unpack() {
     weight_origin = at::_empty_affine_quantized(
         {N, K}, at::device(c10::kCPU).dtype(c10::kQInt8), w_scale[0], w_zp[0]);
   } else if (q_scheme == c10::kPerChannelAffine) {
+    const int64_t qparam_size = N;
     auto scales = at::from_blob(
-        w_scale.data(), w_scale.size(), device(c10::kCPU).dtype(c10::kFloat));
+        w_scale, qparam_size, device(c10::kCPU).dtype(c10::kFloat));
     auto zero_points = at::from_blob(
-        w_zp.data(), w_zp.size(), device(c10::kCPU).dtype(c10::kInt));
+        w_zp, qparam_size, device(c10::kCPU).dtype(c10::kInt));
 
     weight_origin = at::_empty_per_channel_affine_quantized(
         {N, K},
