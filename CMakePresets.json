@@ -14,7 +14,17 @@
         "BUILD_TEST": "OFF",
         "BUILD_BINARY": "OFF",
         "USE_CUDA": "OFF",
-        "USE_ROCM": "OFF"
+        "USE_ITT": "OFF",
+        "USE_KINETO": "OFF",
+        "USE_MKLDNN": "OFF",
+        "USE_NNPACK": "OFF",
+        "USE_NUMPY": "OFF",
+        "USE_ONNX": "OFF",
+        "USE_OPENMP": "OFF",
+        "USE_QNNPACK": "OFF",
+        "USE_ROCM": "OFF",
+        "USE_TBB": "OFF",
+        "USE_XNNPACK": "OFF"
       }
     }
   ],
