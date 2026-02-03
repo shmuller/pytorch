@@ -36,7 +36,7 @@
       "description": "Build and install libtorch using the win64release configure preset.",
       "configurePreset": "win64release",
       "targets": ["install"],
-      "jobs": 8
+      "jobs": 16
     }
   ]
 }
