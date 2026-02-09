@@ -1,4 +1,4 @@
-find_package(MKL QUIET)
+find_package(MKL REQUIRED)
 
 if(NOT TARGET caffe2::mkl)
   add_library(caffe2::mkl INTERFACE IMPORTED)
