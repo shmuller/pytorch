@@ -14,6 +14,7 @@
 #include <c10/util/irange.h>
 
 #include <algorithm>
+#include <cstring>
 #include <new>
 #include <vector>
 
@@ -67,13 +68,15 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
       reinterpret_cast<int8_t*>(weight_contig.data_ptr<c10::qint8>());
 
   c10::optional<at::Tensor> bias_contig;
+  size_t bias_bytes = 0;
   if (bias.has_value()) {
     at::Tensor bias_vec = bias.value();
     TORCH_CHECK(bias_vec.dim() == 1, "bias should be a vector (1D Tensor)");
     TORCH_CHECK(
         bias_vec.size(0) == N,
         "bias should have N elements: " + std::to_string(N));
-    bias_contig = bias->contiguous();
+    bias_contig = bias_vec.contiguous();
+    bias_bytes = bias_contig->nbytes();
   }
 
   using PackT = fbgemm::PackBMatrix<int8_t>;
@@ -81,7 +84,7 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
   const size_t col_offsets_bytes = static_cast<size_t>(N) * sizeof(int32_t);
   const size_t w_scale_bytes = static_cast<size_t>(w_scale_size) * sizeof(float);
   const size_t w_zp_bytes = static_cast<size_t>(w_zp_size) * sizeof(int32_t);
-  const size_t total_bytes = packed_bytes + col_offsets_bytes + w_scale_bytes + w_zp_bytes;
+  const size_t total_bytes = packed_bytes + col_offsets_bytes + w_scale_bytes + w_zp_bytes + bias_bytes;
   auto data = c10::GetCPUAllocator()->allocate(total_bytes);
   auto* buf_ptr = static_cast<std::int8_t*>(data.get());
 
@@ -91,6 +94,8 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
       reinterpret_cast<float*>(reinterpret_cast<char*>(col_offsets_ptr) + col_offsets_bytes);
   auto* w_zp_ptr =
       reinterpret_cast<int32_t*>(reinterpret_cast<char*>(w_scale_ptr) + w_scale_bytes);
+  auto* bias_ptr =
+      reinterpret_cast<float*>(reinterpret_cast<char*>(w_zp_ptr) + w_zp_bytes);
 
   if (qtype == c10::kPerTensorAffine) {
     w_zp_ptr[0] = weight.q_zero_point();
@@ -109,6 +114,11 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
       /*B_zero_point=*/w_zp_ptr,
       /*col_offsets=*/col_offsets_ptr,
       /*qtype=*/qtype);
+
+  if (bias_bytes) {
+    std::memcpy(bias_ptr, bias_contig->data_ptr(), bias_bytes);
+    bias_contig = at::from_blob(bias_ptr, bias_contig->sizes(), bias_contig->options());
+  }
 
   auto* packed_w_raw = new PackT(
       /*trans=*/fbgemm::matrix_op_t::Transpose,
