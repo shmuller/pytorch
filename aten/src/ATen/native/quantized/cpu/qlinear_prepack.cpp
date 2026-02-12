@@ -81,8 +81,7 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
   const size_t col_offsets_bytes = static_cast<size_t>(N) * sizeof(int32_t);
   const size_t w_scale_bytes = static_cast<size_t>(w_scale_size) * sizeof(float);
   const size_t w_zp_bytes = static_cast<size_t>(w_zp_size) * sizeof(int32_t);
-  const size_t total_bytes =
-      packed_bytes + col_offsets_bytes + w_scale_bytes + w_zp_bytes + sizeof(PackT);
+  const size_t total_bytes = packed_bytes + col_offsets_bytes + w_scale_bytes + w_zp_bytes;
   auto data = c10::GetCPUAllocator()->allocate(total_bytes);
   auto* buf_ptr = static_cast<std::int8_t*>(data.get());
 
@@ -92,8 +91,6 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
       reinterpret_cast<float*>(reinterpret_cast<char*>(col_offsets_ptr) + col_offsets_bytes);
   auto* w_zp_ptr =
       reinterpret_cast<int32_t*>(reinterpret_cast<char*>(w_scale_ptr) + w_scale_bytes);
-  auto* obj_ptr =
-      reinterpret_cast<void*>(reinterpret_cast<char*>(w_zp_ptr) + w_zp_bytes);
 
   if (qtype == c10::kPerTensorAffine) {
     w_zp_ptr[0] = weight.q_zero_point();
@@ -113,7 +110,7 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
       /*col_offsets=*/col_offsets_ptr,
       /*qtype=*/qtype);
 
-  auto* packed_w_raw = new (obj_ptr) PackT(
+  auto* packed_w_raw = new PackT(
       /*trans=*/fbgemm::matrix_op_t::Transpose,
       /*nRow=*/K,
       /*nCol=*/N,

@@ -19,6 +19,7 @@ struct ObjectWithBuffersDeleter {
   void operator()(T* p) noexcept {
     if (p) {
       p->~T();
+      delete p;
     }
     t_ptr = c10::DataPtr();
   }
