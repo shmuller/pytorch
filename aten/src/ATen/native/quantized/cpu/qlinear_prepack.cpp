@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <new>
 #include <vector>
 
 int register_linear_params();
@@ -58,14 +57,9 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
   auto N = weight.size(0);
   auto K = weight.size(1);
 
-  // TODO: contiguous is called for further JIT optimizations.
-  auto weight_contig = weight.contiguous();
   const auto qtype = weight.qscheme();
   const int64_t w_zp_size = (qtype == c10::kPerTensorAffine) ? 1 : N;
   const int64_t w_scale_size = (qtype == c10::kPerTensorAffine) ? 1 : N;
-
-  int8_t* weight_ptr_int8 =
-      reinterpret_cast<int8_t*>(weight_contig.data_ptr<c10::qint8>());
 
   c10::optional<at::Tensor> bias_contig;
   size_t bias_bytes = 0;
@@ -97,34 +91,44 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
   auto* bias_ptr =
       reinterpret_cast<float*>(reinterpret_cast<char*>(w_zp_ptr) + w_zp_bytes);
 
-  if (qtype == c10::kPerTensorAffine) {
-    w_zp_ptr[0] = weight.q_zero_point();
-    w_scale_ptr[0] = weight.q_scale();
-  } else if (qtype == c10::kPerChannelAffine) {
-    for (const auto i : c10::irange(N)) {
-      w_zp_ptr[i] = weight.q_per_channel_zero_points()[i].item<int32_t>();
-      w_scale_ptr[i] = weight.q_per_channel_scales()[i].item<float>();
+  int8_t* weight_ptr_int8{};
+
+  const bool bReader = (reinterpret_cast<std::uintptr_t>(data.get_context()) & 1) != 0;
+  if (!bReader) {
+    if (qtype == c10::kPerTensorAffine) {
+      w_zp_ptr[0] = weight.q_zero_point();
+      w_scale_ptr[0] = weight.q_scale();
+    } else if (qtype == c10::kPerChannelAffine) {
+      for (const auto i : c10::irange(N)) {
+        w_zp_ptr[i] = weight.q_per_channel_zero_points()[i].item<int32_t>();
+        w_scale_ptr[i] = weight.q_per_channel_scales()[i].item<float>();
+      }
     }
-  }
 
-  calc_col_offsets_transpose(
-      /*K=*/K,
-      /*N=*/N,
-      /*Bint8=*/weight_ptr_int8,
-      /*B_zero_point=*/w_zp_ptr,
-      /*col_offsets=*/col_offsets_ptr,
-      /*qtype=*/qtype);
+    // TODO: contiguous is called for further JIT optimizations.
+    auto weight_contig = weight.contiguous();
 
-  if (bias_bytes) {
-    std::memcpy(bias_ptr, bias_contig->data_ptr(), bias_bytes);
-    bias_contig = at::from_blob(bias_ptr, bias_contig->sizes(), bias_contig->options());
+    weight_ptr_int8 =
+        reinterpret_cast<int8_t*>(weight_contig.data_ptr<c10::qint8>());
+
+    calc_col_offsets_transpose(
+        /*K=*/K,
+        /*N=*/N,
+        /*Bint8=*/weight_ptr_int8,
+        /*B_zero_point=*/w_zp_ptr,
+        /*col_offsets=*/col_offsets_ptr,
+        /*qtype=*/qtype);
+
+    if (bias_bytes) {
+      std::memcpy(bias_ptr, bias_contig->data_ptr(), bias_bytes);
+    }
   }
 
   auto* packed_w_raw = new PackT(
       /*trans=*/fbgemm::matrix_op_t::Transpose,
       /*nRow=*/K,
       /*nCol=*/N,
-      /*smat=*/weight_ptr_int8,
+      /*smat=*/weight_ptr_int8, // nullptr: data already packed
       /*ld=*/K,
       /*pmat=*/buf_ptr,
       /*groups=*/1);
@@ -132,6 +136,10 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
   PackedLinearWeight::PackedBMatrixPtr packed_w(
       packed_w_raw,
       ObjectWithBuffersDeleter<PackT>{ std::move(data) });
+
+  if (bias_bytes) {
+    bias_contig = at::from_blob(bias_ptr, bias_contig->sizes(), bias_contig->options());
+  }
 
   auto ret_ptr = c10::make_intrusive<PackedLinearWeight>(
       std::move(packed_w),
