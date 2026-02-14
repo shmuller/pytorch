@@ -93,8 +93,8 @@ c10::intrusive_ptr<LinearPackedParamsBase> PackedLinearWeight::prepack(
 
   int8_t* weight_ptr_int8{};
 
-  const bool bReader = (reinterpret_cast<std::uintptr_t>(data.get_context()) & 1) != 0;
-  if (!bReader) {
+  const bool is_written = reinterpret_cast<std::uintptr_t>(data.get_context()) & 1;
+  if (!is_written) {
     if (qtype == c10::kPerTensorAffine) {
       w_zp_ptr[0] = weight.q_zero_point();
       w_scale_ptr[0] = weight.q_scale();
