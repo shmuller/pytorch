@@ -16,7 +16,7 @@
         "USE_CUDA": "OFF",
         "USE_ITT": "OFF",
         "USE_KINETO": "OFF",
-        "USE_MKLDNN": "OFF",
+        "USE_MKLDNN": "ON",
         "USE_NNPACK": "OFF",
         "USE_NUMPY": "OFF",
         "USE_QNNPACK": "OFF",

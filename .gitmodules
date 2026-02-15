@@ -2,22 +2,27 @@
     ignore = dirty
     path = third_party/pybind11
     url = https://github.com/pybind/pybind11.git
+    update = none
 [submodule "third_party/cub"]
     ignore = dirty
     path = third_party/cub
     url = https://github.com/NVlabs/cub.git
+    update = none
 [submodule "third_party/eigen"]
     ignore = dirty
     path = third_party/eigen
     url = https://github.com/eigenteam/eigen-git-mirror.git
+    update = none
 [submodule "third_party/googletest"]
     ignore = dirty
     path = third_party/googletest
     url = https://github.com/google/googletest.git
+    update = none
 [submodule "third_party/benchmark"]
     ignore = dirty
     path = third_party/benchmark
     url = https://github.com/google/benchmark.git
+    update = none
 [submodule "third_party/protobuf"]
     ignore = dirty
     path = third_party/protobuf
@@ -26,14 +31,17 @@
     ignore = dirty
     path = third_party/ios-cmake
     url = https://github.com/Yangqing/ios-cmake.git
+    update = none
 [submodule "third_party/NNPACK"]
     ignore = dirty
     path = third_party/NNPACK
     url = https://github.com/Maratyszcza/NNPACK.git
+    update = none
 [submodule "third_party/gloo"]
     ignore = dirty
     path = third_party/gloo
     url = https://github.com/facebookincubator/gloo
+    update = none
 [submodule "third_party/NNPACK_deps/pthreadpool"]
     ignore = dirty
     path = third_party/pthreadpool
@@ -62,14 +70,17 @@
     ignore = dirty
     path = third_party/python-enum
     url = https://github.com/PeachPy/enum34.git
+    update = none
 [submodule "third_party/python-peachpy"]
     ignore = dirty
     path = third_party/python-peachpy
     url = https://github.com/malfet/PeachPy.git
+    update = none
 [submodule "third_party/python-six"]
     ignore = dirty
     path = third_party/python-six
     url = https://github.com/benjaminp/six.git
+    update = none
 [submodule "third_party/onnx"]
     ignore = dirty
     path = third_party/onnx
@@ -78,10 +89,12 @@
     ignore = dirty
     path = third_party/onnx-tensorrt
     url = https://github.com/onnx/onnx-tensorrt
+    update = none
 [submodule "third_party/sleef"]
     ignore = dirty
     path = third_party/sleef
     url = https://github.com/shibatch/sleef
+    update = none
 [submodule "third_party/ideep"]
     ignore = dirty
     path = third_party/ideep
@@ -90,18 +103,22 @@
     ignore = dirty
     path = third_party/nccl/nccl
     url = https://github.com/NVIDIA/nccl
+    update = none
 [submodule "third_party/gemmlowp/gemmlowp"]
     ignore = dirty
     path = third_party/gemmlowp/gemmlowp
     url = https://github.com/google/gemmlowp.git
+    update = none
 [submodule "third_party/QNNPACK"]
     ignore = dirty
     path = third_party/QNNPACK
     url = https://github.com/pytorch/QNNPACK
+    update = none
 [submodule "third_party/neon2sse"]
     ignore = dirty
     path = third_party/neon2sse
     url = https://github.com/intel/ARM_NEON_2_x86_SSE.git
+    update = none
 [submodule "third_party/fbgemm"]
     ignore = dirty
     path = third_party/fbgemm
@@ -114,14 +131,17 @@
     path = third_party/tbb
     url = https://github.com/01org/tbb
     branch = tbb_2018
+    update = none
 [submodule "android/libs/fbjni"]
     ignore = dirty
     path = android/libs/fbjni
     url = https://github.com/facebookincubator/fbjni.git
+    update = none
 [submodule "third_party/XNNPACK"]
     ignore = dirty
     path = third_party/XNNPACK
     url = https://github.com/google/XNNPACK.git
+    update = none
 [submodule "third_party/fmt"]
     ignore = dirty
     path = third_party/fmt
@@ -130,27 +150,34 @@
     ignore = dirty
     path = third_party/tensorpipe
     url = https://github.com/pytorch/tensorpipe.git
+    update = none
 [submodule "third_party/cudnn_frontend"]
 	path = third_party/cudnn_frontend
 	url = https://github.com/NVIDIA/cudnn-frontend.git
+	update = none
 [submodule "third_party/kineto"]
     path = third_party/kineto
     url = https://github.com/pytorch/kineto
 [submodule "third_party/pocketfft"]
 	path = third_party/pocketfft
 	url = https://github.com/mreineck/pocketfft
+	update = none
 [submodule "third_party/ittapi"]
 	path = third_party/ittapi
 	url = https://github.com/intel/ittapi.git
+	update = none
 [submodule "third_party/flatbuffers"]
 	path = third_party/flatbuffers
 	url = https://github.com/google/flatbuffers.git
 [submodule "third_party/nlohmann"]
 	path = third_party/nlohmann
 	url = https://github.com/nlohmann/json.git
+	update = none
 [submodule "third_party/VulkanMemoryAllocator"]
 	path = third_party/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+	update = none
 [submodule "third_party/cutlass"]
 	path = third_party/cutlass
 	url = https://github.com/NVIDIA/cutlass.git
+	update = none
