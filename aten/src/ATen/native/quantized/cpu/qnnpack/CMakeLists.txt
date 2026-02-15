@@ -180,6 +180,12 @@ set(PYTORCH_QNNPACK_SCALAR_UKERNELS
 set(PYTORCH_QNNPACK_PSIMD_UKERNELS
   src/sgemm/6x8-psimd.c)
 
+# MSVC's C mode is not fully C99/C11 (notably, it rejects array parameters like
+# `params[restrict static 1]` used by psimd kernels). Prefer SSE2 kernels on x86.
+if(MSVC)
+  set(PYTORCH_QNNPACK_PSIMD_UKERNELS)
+endif()
+
 set(PYTORCH_QNNPACK_ARM_NEON_UKERNELS
   src/q8avgpool/mp8x9p8q-neon.c
   src/q8avgpool/up8x9-neon.c
