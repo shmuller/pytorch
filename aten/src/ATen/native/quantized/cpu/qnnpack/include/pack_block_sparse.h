@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <tuple>
 
 #ifndef _WIN32
 #include <qnnpack/AlignedAllocator.h>

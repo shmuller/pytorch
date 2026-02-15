@@ -82,22 +82,22 @@ enum pytorch_qnnp_status qnnpackLinearDynamic(
 
   const struct pytorch_qnnp_conv_dynamic_quantization_params
       quantizationParams {
-    input_zero_point, kernel_zero_points, dequantization_scales,
+    input_zero_point, kernel_zero_points, dequantization_scales
   };
 
   struct q8gemm_dq_context q8gemm_dq_context = {
-      .k = group_input_channels,
-      .k_stride = k_stride,
-      .n = group_output_channels,
-      .n_stride = n_stride,
-      .a = input,
-      .a_stride = input_stride,
-      .packed_w = (uint8_t*)packed_weights,
-      .bias = bias,
-      .c = output,
-      .c_stride = output_stride,
-      .quantization_params = quantizationParams,
-      .ukernel = pytorch_qnnp_params.q8conv.gemm_dq,
+      group_input_channels,
+      k_stride,
+      group_output_channels,
+      n_stride,
+      input,
+      input_stride,
+      (uint8_t*)packed_weights,
+      bias,
+      output,
+      output_stride,
+      quantizationParams,
+      pytorch_qnnp_params.q8conv.gemm_dq,
   };
 
   if (output_size == 0) {

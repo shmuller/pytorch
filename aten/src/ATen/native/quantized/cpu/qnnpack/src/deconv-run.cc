@@ -176,20 +176,20 @@ enum pytorch_qnnp_status qnnpackDeConv(
   // Run the kernel
   const size_t m_stride = round_up(output_size, mr);
   struct q8conv_context q8conv_context = {
-      .bs = deconvolution->batch_size,
-      .ks = kernel_size,
-      .kc = group_input_channels,
-      .kc_stride = k_stride * kernel_size,
-      .m = output_size,
-      .m_stride = m_stride,
-      .n = group_output_channels,
-      .n_stride = n_stride,
-      .indirect_a = (const uint8_t**)deconvolution->indirection_buffer,
-      .packed_w = packed_weights,
-      .c = output,
-      .c_stride = deconvolution->output_pixel_stride,
-      .quantization_params = deconvolution->conv_quantization_params,
-      .ukernel = pytorch_qnnp_params.q8conv.conv,
+      deconvolution->batch_size,
+      kernel_size,
+      group_input_channels,
+      k_stride * kernel_size,
+      output_size,
+      m_stride,
+      group_output_channels,
+      n_stride,
+      (const uint8_t**)deconvolution->indirection_buffer,
+      packed_weights,
+      output,
+      deconvolution->output_pixel_stride,
+      deconvolution->conv_quantization_params,
+      pytorch_qnnp_params.q8conv.conv,
   };
 
   pthreadpool_compute_4d_tiled(
