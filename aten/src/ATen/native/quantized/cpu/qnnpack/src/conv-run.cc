@@ -419,26 +419,22 @@ enum pytorch_qnnp_status qnnpackConv(
       switch (kernel_size) {
         case 9: {
           struct q8dwconv2d_context context = {
-              .groups = groups,
-              .group_stride = group_stride,
-              .indirection_buffer =
-                  (const uint8_t**)convolution->indirection_buffer,
-              .indirection_buffer_row_stride = step_height,
-              .indirection_buffer_col_stride =
-                  kernel_height * step_width * sizeof(void*),
-              .packed_weights = packed_weights,
-              .output = output,
-              .output_height = convolution->output_height,
-              .output_width = convolution->output_width,
-              .output_row_stride =
-                  convolution->output_width * output_pixel_stride,
-              .output_col_increment =
-                  (output_pixel_stride - groups) * sizeof(uint8_t),
-              .quantization_params = conv_quantization_params,
-              .unipass_ukernel = convolution->per_channel
+              groups,
+              group_stride,
+              (const uint8_t**)convolution->indirection_buffer,
+              step_height,
+              kernel_height * step_width * sizeof(void*),
+              packed_weights,
+              output,
+              convolution->output_height,
+              convolution->output_width,
+              convolution->output_width * output_pixel_stride,
+              (output_pixel_stride - groups) * sizeof(uint8_t),
+              conv_quantization_params,
+              convolution->per_channel
                   ? pytorch_qnnp_params.q8dw9.updw_per_channel
                   : pytorch_qnnp_params.q8dw9.updw,
-              .multipass_ukernel = convolution->per_channel
+              convolution->per_channel
                   ? pytorch_qnnp_params.q8dw25.mpdw_per_channel
                   : pytorch_qnnp_params.q8dw25.mpdw,
           };
@@ -452,26 +448,22 @@ enum pytorch_qnnp_status qnnpackConv(
         }
         case 25: {
           struct q8dwconv2d_context context = {
-              .groups = groups,
-              .group_stride = group_stride,
-              .indirection_buffer =
-                  (const uint8_t**)convolution->indirection_buffer,
-              .indirection_buffer_row_stride = step_height,
-              .indirection_buffer_col_stride =
-                  kernel_height * step_width * sizeof(void*),
-              .packed_weights = packed_weights,
-              .output = output,
-              .output_height = convolution->output_height,
-              .output_width = convolution->output_width,
-              .output_row_stride =
-                  convolution->output_width * output_pixel_stride,
-              .output_col_increment =
-                  (output_pixel_stride - groups) * sizeof(uint8_t),
-              .quantization_params = conv_quantization_params,
-              .unipass_ukernel = convolution->per_channel
+              groups,
+              group_stride,
+              (const uint8_t**)convolution->indirection_buffer,
+              step_height,
+              kernel_height * step_width * sizeof(void*),
+              packed_weights,
+              output,
+              convolution->output_height,
+              convolution->output_width,
+              convolution->output_width * output_pixel_stride,
+              (output_pixel_stride - groups) * sizeof(uint8_t),
+              conv_quantization_params,
+              convolution->per_channel
                   ? pytorch_qnnp_params.q8dw9.updw_per_channel
                   : pytorch_qnnp_params.q8dw9.updw,
-              .multipass_ukernel = convolution->per_channel
+              convolution->per_channel
                   ? pytorch_qnnp_params.q8dw25.mpdw_per_channel
                   : pytorch_qnnp_params.q8dw25.mpdw,
           };
@@ -485,24 +477,21 @@ enum pytorch_qnnp_status qnnpackConv(
         }
         case 27: {
           struct q8dwconv3d_context context = {
-              .groups = groups,
-              .group_stride = group_stride,
-              .indirection_buffer =
-                  (const uint8_t**)convolution->indirection_buffer,
-              .indirection_buffer_slice_stride =
-                  step_height * convolution->output_height,
-              .indirection_buffer_row_stride = step_height * sizeof(void*),
-              .indirection_buffer_col_stride =
-                  kernel_height * kernel_depth * step_width * sizeof(void*),
-              .packed_weights = packed_weights,
-              .output = output,
-              .output_depth = convolution->output_depth,
-              .output_height = convolution->output_height,
-              .output_width = convolution->output_width,
-              .output_slice_stride = convolution->output_height *
+              groups,
+              group_stride,
+              (const uint8_t**)convolution->indirection_buffer,
+              step_height * convolution->output_height,
+              step_height * sizeof(void*),
+              kernel_height * kernel_depth * step_width * sizeof(void*),
+              packed_weights,
+              output,
+              convolution->output_depth,
+              convolution->output_height,
+              convolution->output_width,
+              convolution->output_height *
                   convolution->output_width * output_pixel_stride,
-              .quantization_params = conv_quantization_params,
-              .multipass_ukernel = pytorch_qnnp_params.q8dw27.mpdw,
+              conv_quantization_params,
+              pytorch_qnnp_params.q8dw27.mpdw,
           };
           pthreadpool_compute_2d(
               threadpool,
@@ -539,18 +528,18 @@ enum pytorch_qnnp_status qnnpackConv(
       }
       convolution->a_sum = a_sum;
       struct q8sum_rows_context context = {
-          .a = input,
-          .groups = groups,
-          .m = input_size,
-          .k = convolution->group_input_channels,
-          .a_stride = input_pixel_stride,
+          input,
+          groups,
+          input_size,
+          convolution->group_input_channels,
+          input_pixel_stride,
           // XZP kernels are not supporting per channel quant.
           // We dont really use XZP kernels ATM.
           // Thus assigning the zero point of first channel.
-          .multiplier = (int32_t)-kernel_zero_points[0],
-          .a_sum = a_sum,
-          .a_sum_stride = input_size,
-          .ukernel = pytorch_qnnp_params.q8sum_rows.sum_rows,
+          (int32_t)-kernel_zero_points[0],
+          a_sum,
+          input_size,
+          pytorch_qnnp_params.q8sum_rows.sum_rows,
       };
       pthreadpool_compute_3d_tiled(
           threadpool,
@@ -564,21 +553,21 @@ enum pytorch_qnnp_status qnnpackConv(
           pytorch_qnnp_params.q8sum_rows.m);
 
       struct q8gemm_xzp_context q8gemm_xzp_context = {
-          .k = convolution->group_input_channels,
-          .k_stride = k_stride,
-          .n = convolution->group_output_channels,
-          .n_stride = n_stride,
-          .a = input,
-          .a_stride = input_pixel_stride,
-          .packed_w = packed_weights,
-          .c = output,
-          .c_stride = output_pixel_stride,
-          .a_sum = a_sum,
-          .groups = groups,
-          .batch_size = batch_size,
-          .a_sum_stride = input_size,
-          .requantization_params = requantization_params,
-          .ukernel = pytorch_qnnp_params.q8conv_xzp.gemm,
+          convolution->group_input_channels,
+          k_stride,
+          convolution->group_output_channels,
+          n_stride,
+          input,
+          input_pixel_stride,
+          packed_weights,
+          output,
+          output_pixel_stride,
+          a_sum,
+          groups,
+          batch_size,
+          input_size,
+          requantization_params,
+          pytorch_qnnp_params.q8conv_xzp.gemm,
       };
       pthreadpool_compute_4d_tiled(
           threadpool,
@@ -604,17 +593,17 @@ enum pytorch_qnnp_status qnnpackConv(
       const size_t n_stride = (group_output_channels + (nr - 1)) & -nr;
 
       struct q8gemm_context q8gemm_context = {
-          .k = convolution->group_input_channels,
-          .k_stride = k_stride,
-          .n = convolution->group_output_channels,
-          .n_stride = n_stride,
-          .a = input,
-          .a_stride = input_pixel_stride,
-          .packed_w = (uint8_t*)packed_weights,
-          .c = output,
-          .c_stride = output_pixel_stride,
-          .quantization_params = conv_quantization_params,
-          .ukernel = pytorch_qnnp_params.q8conv.gemm,
+          convolution->group_input_channels,
+          k_stride,
+          convolution->group_output_channels,
+          n_stride,
+          input,
+          input_pixel_stride,
+          (uint8_t*)packed_weights,
+          output,
+          output_pixel_stride,
+          conv_quantization_params,
+          pytorch_qnnp_params.q8conv.gemm,
       };
 
       pthreadpool_compute_4d_tiled(
@@ -642,20 +631,20 @@ enum pytorch_qnnp_status qnnpackConv(
       const size_t m_stride = round_up(output_size, mr);
 
       struct q8conv_context q8conv_context = {
-          .bs = batch_size,
-          .ks = kernel_size,
-          .kc = group_input_channels,
-          .kc_stride = k_stride * kernel_size,
-          .m = output_size,
-          .m_stride = m_stride,
-          .n = group_output_channels,
-          .n_stride = n_stride,
-          .indirect_a = (const uint8_t**)convolution->indirection_buffer,
-          .packed_w = packed_weights,
-          .c = output,
-          .c_stride = output_pixel_stride,
-          .quantization_params = conv_quantization_params,
-          .ukernel = pytorch_qnnp_params.q8conv.conv,
+          batch_size,
+          kernel_size,
+          group_input_channels,
+          k_stride * kernel_size,
+          output_size,
+          m_stride,
+          group_output_channels,
+          n_stride,
+          (const uint8_t**)convolution->indirection_buffer,
+          packed_weights,
+          output,
+          output_pixel_stride,
+          conv_quantization_params,
+          pytorch_qnnp_params.q8conv.conv,
       };
 
       pthreadpool_compute_4d_tiled(

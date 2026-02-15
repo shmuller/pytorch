@@ -59,12 +59,6 @@ elseif(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(i[3-6]86|x86_64|armv[5-8].*|aarch64
   message(FATAL_ERROR "Unrecognized CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-if(NOT CMAKE_SYSTEM_NAME)
-  message(FATAL_ERROR "CMAKE_SYSTEM_NAME not defined")
-elseif(NOT CMAKE_SYSTEM_NAME MATCHES "^(Darwin|Linux|Android)$")
-  message(FATAL_ERROR "Unrecognized CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
-endif()
-
 # ---[ Download deps
 set(CONFU_DEPENDENCIES_SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps"
   CACHE PATH "Confu-style dependencies source directory")
