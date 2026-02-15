@@ -20,6 +20,7 @@
         "USE_NNPACK": "OFF",
         "USE_NUMPY": "OFF",
         "USE_QNNPACK": "OFF",
+        "USE_PYTORCH_QNNPACK": "ON",
         "USE_ROCM": "OFF",
         "USE_TBB": "OFF",
         "USE_XNNPACK": "OFF",
