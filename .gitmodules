@@ -108,17 +108,14 @@
     ignore = dirty
     path = third_party/gemmlowp/gemmlowp
     url = https://github.com/google/gemmlowp.git
-    update = none
 [submodule "third_party/QNNPACK"]
     ignore = dirty
     path = third_party/QNNPACK
     url = https://github.com/pytorch/QNNPACK
-    update = none
 [submodule "third_party/neon2sse"]
     ignore = dirty
     path = third_party/neon2sse
     url = https://github.com/intel/ARM_NEON_2_x86_SSE.git
-    update = none
 [submodule "third_party/fbgemm"]
     ignore = dirty
     path = third_party/fbgemm
