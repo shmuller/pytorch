@@ -362,7 +362,7 @@ if(USE_NNPACK OR USE_QNNPACK OR USE_PYTORCH_QNNPACK OR USE_XNNPACK)
     caffe2_update_option(USE_XNNPACK OFF)
   else()
     # Disable unsupported NNPack combinations with MSVC
-    if(MSVC)
+    if(MSVC AND false)
       caffe2_update_option(USE_NNPACK OFF)
       caffe2_update_option(USE_QNNPACK OFF)
       caffe2_update_option(USE_PYTORCH_QNNPACK OFF)
