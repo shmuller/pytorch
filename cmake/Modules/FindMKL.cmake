@@ -324,6 +324,13 @@ IF (NOT "${MKL_THREADING}" STREQUAL "SEQ")
   ENDFOREACH(mklrtl)
 ENDIF (NOT "${MKL_THREADING}" STREQUAL "SEQ")
 
+
+IF (NOT MKL_LIBRARIES AND "${MKL_THREADING}" STREQUAL "OMP")
+  MESSAGE(FATAL_ERROR "MKL threading is OMP but Intel OpenMP runtime (libiomp5) was not found.")
+ENDIF()
+
+IF ("${MKL_THREADING}" STREQUAL "SEQ")
+
 # Second: search for sequential ones
 FOREACH(mkliface ${mklifaces})
   FOREACH(mkl64 ${mkl64s} "")
@@ -337,6 +344,8 @@ FOREACH(mkliface ${mklifaces})
     ENDIF (NOT MKL_LIBRARIES)
   ENDFOREACH(mkl64)
 ENDFOREACH(mkliface)
+
+ENDIF ("${MKL_THREADING}" STREQUAL "SEQ")
 
 # First: search for parallelized ones with native pthread lib
 FOREACH(mklrtl ${mklrtls} "")
