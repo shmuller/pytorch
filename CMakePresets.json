@@ -13,6 +13,7 @@
         "BLAS": "MKL",
         "MKL_THREADING": "OMP",
         "USE_OPENMP": "ON",
+        "USE_DISTRIBUTED": "OFF",
         "USE_CUDA": "OFF",
         "USE_ITT": "OFF",
         "USE_KINETO": "OFF",
