@@ -1,7 +1,7 @@
 #include <torch/csrc/lazy/core/multi_wait.h>
 
 #include <chrono>
-#include <exception>
+#include <stdexcept>
 
 namespace torch {
 namespace lazy {

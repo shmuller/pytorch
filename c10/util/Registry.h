@@ -18,6 +18,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 
 #include <c10/macros/Macros.h>
 #include <c10/util/Type.h>
