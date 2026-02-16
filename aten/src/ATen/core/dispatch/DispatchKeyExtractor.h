@@ -151,9 +151,16 @@ public:
         // no safe toTensorRef method, alas)
         ks = ks | ivalue.unsafeToTensorImpl()->key_set();
       } else if (C10_UNLIKELY(ivalue.isTensorList())) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-reference"
+#endif
         for (const at::Tensor& tensor : ivalue.toTensorList()) {
           ks = ks | tensor.key_set();
         }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
       }
       // Tensor?[] translates to a c10::List<IValue> so we need to peek inside
       else if (C10_UNLIKELY(ivalue.isList())) {

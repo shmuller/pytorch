@@ -168,11 +168,18 @@ class IListRefTagImpl<IListRefTag::Boxed, at::OptionalTensorRef>
    */
   static IListRefConstRef<at::OptionalTensorRef> iterator_get(
       const typename list_type::const_iterator& it) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-reference" // not dangling: const& to ivalue.payload.as_tensor
+#endif
     const auto& ivalue = (*it).get();
     if (!ivalue.isNone()) {
         const auto& tensor = ivalue.toTensor();
         return (tensor.defined()) ? tensor : at::OptionalTensorRef{};
     }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
     return {};
   }
 };

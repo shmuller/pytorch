@@ -2,17 +2,18 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "win64release",
-      "displayName": "PyTorch/libtorch Windows x64 Release (Ninja)",
-      "description": "Build libtorch from the current PyTorch checkout directory using Ninja (run from a VS2019 dev prompt / pipeline VS2019 container).",
+      "name": "Release",
+      "displayName": "Configure PyTorch/libtorch (Ninja)",
+      "description": "On Windows, run in a VS2019 environment.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_BUILD_TYPE": "${presetName}",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "BLAS": "MKL",
         "MKL_THREADING": "OMP",
         "USE_OPENMP": "ON",
+        "USE_DISTRIBUTED": "OFF",
         "USE_CUDA": "OFF",
         "USE_ITT": "OFF",
         "USE_KINETO": "OFF",
@@ -28,16 +29,25 @@
         "BUILD_TEST": "OFF",
         "BUILD_BINARY": "OFF"
       }
+    },
+    {
+      "name": "RelWithDebInfo",
+      "inherits": "Release"
     }
   ],
   "buildPresets": [
     {
-      "name": "win64release",
-      "displayName": "Build PyTorch/libtorch Windows x64 Release (Ninja)",
-      "description": "Build and install libtorch using the win64release configure preset.",
-      "configurePreset": "win64release",
+      "name": "Release",
+      "displayName": "Build PyTorch/libtorch (Ninja)",
+      "description": "Build and install libtorch.",
+      "configurePreset": "Release",
       "targets": ["install"],
       "jobs": 16
+    },
+    {
+      "name": "RelWithDebInfo",
+      "inherits": "Release",
+      "configurePreset": "RelWithDebInfo"
     }
   ]
 }
