@@ -1236,6 +1236,10 @@ if(USE_OPENMP)
     message(WARNING "Not compiling with OpenMP. Suppress this warning with -DUSE_OPENMP=OFF")
     caffe2_update_option(USE_OPENMP OFF)
   endif()
+
+  message(STATUS "Globally bypass OpenMP.cmake")
+  set(OpenMP_included TRUE)
+  set(OpenMP_cmake_included TRUE)
 endif()
 
 
