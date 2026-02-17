@@ -1,3 +1,7 @@
+if(NOT MSVC)
+  add_link_options("-Wl,--as-needed")
+endif()
+
 # RPATH stuff
 # see https://cmake.org/Wiki/CMake_RPATH_handling
 if(APPLE)
@@ -1224,14 +1228,16 @@ if(USE_OPENMP)
   endif()
 
   if(OPENMP_FOUND)
-    message(STATUS "Adding OpenMP CXX_FLAGS: " ${OpenMP_CXX_FLAGS})
+    message(STATUS "Adding OpenMP compile options: " ${OpenMP_CXX_FLAGS})
     if("${OpenMP_CXX_LIBRARIES}" STREQUAL "")
         message(STATUS "No OpenMP library needs to be linked against")
     else()
         message(STATUS "Will link against OpenMP libraries: ${OpenMP_CXX_LIBRARIES}")
     endif()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    add_compile_options(
+      $<$<COMPILE_LANGUAGE:C>:${OpenMP_C_FLAGS}>
+      $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>
+    )
   else()
     message(WARNING "Not compiling with OpenMP. Suppress this warning with -DUSE_OPENMP=OFF")
     caffe2_update_option(USE_OPENMP OFF)
