@@ -215,35 +215,8 @@ MACRO(CHECK_ALL_LIBRARIES LIBRARIES OPENMP_TYPE OPENMP_LIBRARY _name _list _flag
     UNSET(${_prefix}_${_library}_LIBRARY)
     IF(_libraries_work)
       IF(${_library} MATCHES "omp")
-        IF(_openmp_type)
-          MESSAGE(FATAL_ERROR "More than one OpenMP libraries appear in the MKL test: ${_list}")
-        ELSEIF(${_library} MATCHES "gomp")
-          SET(_openmp_type "GNU")
-          # Use FindOpenMP to find gomp
-          FIND_PACKAGE(OpenMP QUIET)
-          IF(OPENMP_FOUND)
-            # Test that none of the found library names contains "iomp" (Intel
-            # OpenMP). This doesn't necessarily mean that we have gomp... but it
-            # is probably good enough since on gcc we should already have
-            # OpenMP_CXX_FLAGS="-fopenmp" and OpenMP_CXX_LIB_NAMES="".
-            SET(_found_gomp true)
-            FOREACH(_lib_name ${OpenMP_CXX_LIB_NAMES})
-              IF (_found_gomp AND "${_lib_name}" MATCHES "iomp")
-                SET(_found_gomp false)
-              ENDIF()
-            ENDFOREACH()
-            IF(_found_gomp)
-              SET(${_prefix}_${_library}_LIBRARY ${OpenMP_CXX_FLAGS})
-              SET(_openmp_library "${${_prefix}_${_library}_LIBRARY}")
-            ENDIF()
-          ENDIF(OPENMP_FOUND)
-        ELSEIF(${_library} MATCHES "iomp")
-          SET(_openmp_type "Intel")
-          FIND_LIBRARY(${_prefix}_${_library}_LIBRARY NAMES ${_library})
-          SET(_openmp_library "${${_prefix}_${_library}_LIBRARY}")
-        ELSE()
-          MESSAGE(FATAL_ERROR "Unknown OpenMP flavor: ${_library}")
-        ENDIF()
+        FIND_PACKAGE(OpenMP REQUIRED)
+        SET(${_prefix}_${_library}_LIBRARY ${OpenMP_CXX_LIBRARIES})
       ELSEIF(${_library} STREQUAL "tbb")
         # Separately handling compiled TBB
         SET(_found_tbb TRUE)
