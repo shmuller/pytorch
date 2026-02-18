@@ -804,7 +804,7 @@ set(Caffe2_CPU_SRCS ${Caffe2_CPU_SRCS_NON_AVX} ${Caffe2_CPU_SRCS_AVX2} ${Caffe2_
 # END formerly-libtorch sources
 # ==========================================================
 
-add_library(torch_cpu ${Caffe2_CPU_SRCS})
+add_library(torch_cpu SHARED ${Caffe2_CPU_SRCS})
 if(HAVE_SOVERSION)
   set_target_properties(torch_cpu PROPERTIES
       VERSION ${TORCH_VERSION} SOVERSION ${TORCH_SOVERSION})
