@@ -166,7 +166,7 @@ option(BUILD_LITE_INTERPRETER "Master flag to build Lite Interpreter" OFF)
 cmake_dependent_option(
     BUILD_CAFFE2_OPS "Build Caffe2 operators" ON
     "BUILD_CAFFE2" OFF)
-option(BUILD_SHARED_LIBS "Build libcaffe2.so" ON)
+option(BUILD_SHARED_LIBS "Build libcaffe2.so" OFF)
 cmake_dependent_option(
     CAFFE2_LINK_LOCAL_PROTOBUF "If set, build protobuf inside libcaffe2.so." ON
     "BUILD_SHARED_LIBS AND BUILD_CUSTOM_PROTOBUF" OFF)
