@@ -41,7 +41,13 @@ file(GLOB C10_HEADERS
         macros/*.h
         util/*.h
         )
-add_library(c10 ${C10_SRCS} ${C10_HEADERS})
+
+if(MSVC)
+  add_library(c10 ${C10_SRCS} ${C10_HEADERS})
+else()
+  add_library(c10 OBJECT ${C10_SRCS} ${C10_HEADERS})
+endif()
+
 if(HAVE_SOVERSION)
   set_target_properties(c10 PROPERTIES
       VERSION ${TORCH_VERSION} SOVERSION ${TORCH_SOVERSION})
@@ -64,7 +70,10 @@ endif()
 if(${USE_GLOG})
     target_link_libraries(c10 PUBLIC glog::glog)
 endif()
-target_link_libraries(c10 PRIVATE fmt::fmt-header-only)
+
+# Avoid linking to fmt::fmt-header-only (can leak into export usage requirements
+# for static libs), but still reuse its include dirs/defines for compilation.
+target_link_libraries(c10 PUBLIC $<BUILD_INTERFACE:fmt::fmt-header-only>)
 
 find_package(Backtrace)
 if(Backtrace_FOUND)
