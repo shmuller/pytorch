@@ -16,6 +16,8 @@ message(STATUS "_OPENMP_EXPECTED_ROOT: ${_OPENMP_EXPECTED_ROOT}")
 if(MSVC)
   find_library(OpenMP_CXX_LIBRARIES NAMES libiomp5md PATHS "${_OPENMP_EXPECTED_ROOT}/lib" NO_DEFAULT_PATH)
   set(OpenMP_CXX_FLAGS "-openmp:experimental")
+
+  install(FILES "${_OPENMP_EXPECTED_ROOT}/bin/libiomp5md.dll" DESTINATION lib)
 else()
   find_file(OpenMP_CXX_LIBRARIES NAMES libiomp5.a PATHS "${_OPENMP_EXPECTED_ROOT}/lib" NO_DEFAULT_PATH)
   set(OpenMP_CXX_FLAGS "-fopenmp")
@@ -37,6 +39,8 @@ if(OpenMP_CXX_LIBRARIES)
 
   add_library(OpenMP::OpenMP_C INTERFACE IMPORTED)
   set_property(TARGET OpenMP::OpenMP_C PROPERTY INTERFACE_LINK_LIBRARIES "${OpenMP_C_LIBRARIES}")
+
+  install(FILES "${OpenMP_CXX_LIBRARIES}" DESTINATION lib)
 endif()
 
 set(OPENMP_FOUND ${OpenMP_FOUND})
