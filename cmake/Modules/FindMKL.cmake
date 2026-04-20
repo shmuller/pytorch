@@ -79,11 +79,16 @@ IF ("${MKL_THREADING}" STREQUAL "TBB")
   SET(mklthreads "mkl_tbb_thread")
   SET(mklrtls "tbb")
 ELSE()
-  SET(mklthreads "mkl_intel_thread")
   IF (MSVC)
+    SET(mklthreads "mkl_intel_thread")
     SET(mklrtls "libiomp5md")
   ELSE()
-    SET(mklrtls "iomp5")
+    # On Linux/gcc we link libgomp (see custom FindOpenMP.cmake), so MKL must
+    # use its GNU threading layer which calls GOMP_* entry points instead of
+    # __kmpc_*. Pairing mkl_intel_thread with libgomp leaves __kmpc_* symbols
+    # unresolved in libtorch_cpu.so.
+    SET(mklthreads "mkl_gnu_thread")
+    SET(mklrtls "gomp")
   ENDIF (MSVC)
 ENDIF()
 SET(mklifaces  "intel")

@@ -19,7 +19,9 @@ if(MSVC)
 
   install(FILES "${_OPENMP_EXPECTED_ROOT}/bin/libiomp5md.dll" DESTINATION lib)
 else()
-  find_file(OpenMP_CXX_LIBRARIES NAMES libiomp5.a PATHS "${_OPENMP_EXPECTED_ROOT}/lib" NO_DEFAULT_PATH)
+  # Link GNU OpenMP dynamically so libtorch_cpu.so shares a single OpenMP
+  # runtime with the rest of the Python process (numpy/scipy/sklearn/...).
+  set(OpenMP_CXX_LIBRARIES "gomp")
   set(OpenMP_CXX_FLAGS "-fopenmp")
 endif()
 
@@ -39,8 +41,6 @@ if(OpenMP_CXX_LIBRARIES)
 
   add_library(OpenMP::OpenMP_C INTERFACE IMPORTED)
   set_property(TARGET OpenMP::OpenMP_C PROPERTY INTERFACE_LINK_LIBRARIES "${OpenMP_C_LIBRARIES}")
-
-  install(FILES "${OpenMP_CXX_LIBRARIES}" DESTINATION lib)
 endif()
 
 set(OPENMP_FOUND ${OpenMP_FOUND})
