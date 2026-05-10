@@ -55,11 +55,12 @@ install(FILES ${CMAKE_BINARY_DIR}/caffe2/core/macros.h
 # ---[ ATen specific
 if(INTERN_BUILD_ATEN_OPS)
   if(MSVC)
-    set(OPT_FLAG "/fp:strict ")
+    set(OPT_FLAG "/fp:fast ")
   else(MSVC)
-    set(OPT_FLAG "-O3 ")
+    set(FP_FAST_MATH "-ffast-math")
+    set(OPT_FLAG "-O3 ${FP_FAST_MATH} ")
     if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
-      set(OPT_FLAG " ")
+      set(OPT_FLAG "${FP_FAST_MATH} ")
     endif()
   endif(MSVC)
 
